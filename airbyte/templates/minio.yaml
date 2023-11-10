@@ -33,7 +33,7 @@ spec:
       containers:
         - name: airbyte-minio
           # Pulls the default Minio image from Docker Hub
-          image: "{{ .Values.minio.image.repository }}:{{ .Values.minio.image.tag }}"
+          image: image-registry.openshift-image-registry.svc:5000/a1b9b0-dev/minio@sha256:7a0fc961ebd7baa1ec89c8ce93920d1a8def1506aafec6c72d112acf0be71048
           args:
             - server
             - /data # previously /storage (not sure why)

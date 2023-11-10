@@ -53,7 +53,7 @@ spec:
       {{- end }}
       containers:
       - name: airbyte-worker-container
-        image: {{ printf "%s:%s" .Values.image.repository (include "worker.imageTag" .) }}
+        image: image-registry.openshift-image-registry.svc:5000/a1b9b0-dev/airbyte-worker-modified@sha256:13e6667eb48b2eb1f94ec2ea44b44d1f738f82d1952451f67496a1da3f1b2e6c
         imagePullPolicy: "{{ .Values.image.pullPolicy }}"
         env:
         {{- if .Values.debug.enabled }}

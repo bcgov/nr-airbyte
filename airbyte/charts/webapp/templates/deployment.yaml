@@ -53,7 +53,7 @@ spec:
       {{- end }}
       containers:
       - name: airbyte-webapp-container
-        image: {{ printf "%s:%s" .Values.image.repository (include "webapp.imageTag" .) }}
+        image: image-registry.openshift-image-registry.svc:5000/a1b9b0-dev/airbyte-webapp-port-change@sha256:0a2a9306f9f39cc7f7f403584bd357ac3939843b938aa9919d223a72e5723b64
         imagePullPolicy: "{{ .Values.image.pullPolicy }}"
         env:
         {{- if eq .Values.global.deploymentMode "oss"  }}
