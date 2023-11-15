@@ -2,7 +2,7 @@
 
 ## Helm chart sourced from
 ```sh
-helm repo add airbyte https://airbytehq.github.io/helm-chart
+helm repo add airbyte https://airbytehq.github.io/helm-charts
 ```
 
 ## Deploying to OpenShift
@@ -20,6 +20,17 @@ View Minio object storage with this command:
 ```sh
 oc --namespace a1b9b0-dev port-forward pod/airbyte-minio-0 37373:37373
 ```
+
+Access database via terminal using this command:
+```sh
+psql -U airbyte -d db-airbyte
+```
+Set resource limits for a specific connection using this command:
+```sh 
+update connection set resource_requirements = '{"cpu_limit": "5", "cpu_request": "1", "memory_limit": "1000Mi", "memory_request": "500Mi"}' where id = '5ff07aa0-036d-4133-a0e4-c7684d5bb7da';
+```
+
+
 
 More info: https://apps.nrs.gov.bc.ca/int/confluence/x/zQ09Cg
 
