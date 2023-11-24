@@ -398,7 +398,9 @@ env_vars:
   SPEC_JOB_KUBE_LABELS: "DataClass=Medium"
   DISCOVER_JOB_KUBE_LABELS: "DataClass=Medium"
   NORMALIZATION_JOB_KUBE_LABELS: "DataClass=Medium"
-  REPLICATION_JOB_KUBE_LABELS: "DataClass=Medium"
+  REPLICATION_JOB_KUBE_LABELS: "DataClass=Medium"  
+  REPLICATION_ORCHESTRATOR_CPU_LIMIT: 2
+  REPLICATION_ORCHESTRATOR_CPU_REQUEST: 1
 
 
 ## extraSelectorLables [object] - use to specify own additional selector labels for deployment
