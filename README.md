@@ -13,7 +13,12 @@ helm install dev-release-ab .
 ## Notes: 
 Get the application running with this command (Use NRM.DataFoundations@gov.bc.ca as email):
 ```sh
-oc --namespace a1b9b0-dev port-forward svc/dev-release-ab-airbyte-webapp-svc 8080:80
+oc --namespace a1b9b0-dev port-forward svc/dev-release-ab-airbyte-webapp-svc 8090:80
+```
+
+Use the API with this commmnd: 
+```sh 
+oc --namespace a1b9b0-dev port-forward svc dev-release-ab-airbyte-api-server-svc 8091:80
 ```
 
 View Minio object storage with this command: 
@@ -30,12 +35,6 @@ Set resource limits for a specific connection using this command:
 ```sh 
 update connection set resource_requirements = '{"cpu_limit": "5", "cpu_request": "1", "memory_limit": "1000Mi", "memory_request": "500Mi"}' where id = '5ff07aa0-036d-4133-a0e4-c7684d5bb7da';
 ```
-
-Resource limits that need more testing:             
-- name: REPLICATION_ORCHESTRATOR_CPU_LIMIT
-  value: '2'
-- name: REPLICATION_ORCHESTRATOR_CPU_REQUEST
-    value: '1'
 
 November 2023 Update: Airbyte (in OpenShift Emerald cluster) is currently able to replicate json data from Oracle to Postgres. However, the 'normalization' pod is failing. This step uses DBT to flatten the replicated json data into columns. The 'normalization' pod is expected to be phased out for Postgres destinations (and replaced with a new method) by end of year: https://github.com/airbytehq/airbyte/issues/25194 https://github.com/airbytehq/airbyte/issues/26028
 
