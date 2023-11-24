@@ -1,0 +1,9 @@
+
+
+POST /v1/jobs HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+Host: localhost:8091
+Content-Length: 72
+
+{"jobType":"sync","connectionId":"2b9f5022-51d3-4fdf-ba83-82d1b5d80ce8"}
