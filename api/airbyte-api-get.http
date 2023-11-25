@@ -1,5 +1,3 @@
-
-
 GET /v1/connections?workspaceIds=ea2db1ec-0357-4868-b216-4ca7333f5df4&includeDeleted=false HTTP/1.1
 Accept: application/json
 Host: localhost:8091

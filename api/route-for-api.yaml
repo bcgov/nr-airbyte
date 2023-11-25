@@ -1,0 +1,14 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: route-for-airbyte-api
+  namespace: a1b9b0-dev
+spec:
+  host: route-for-airbyte-api-a1b9b0-dev.apps.emerald.devops.gov.bc.ca
+  to:
+    kind: Service
+    name: dev-release-ab-airbyte-api-server-svc
+    weight: 100
+  port:
+    targetPort: http
+  wildcardPolicy: None

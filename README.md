@@ -18,7 +18,7 @@ oc --namespace a1b9b0-dev port-forward svc/dev-release-ab-airbyte-webapp-svc 809
 
 Use the API with this commmnd: 
 ```sh 
-oc --namespace a1b9b0-dev port-forward svc dev-release-ab-airbyte-api-server-svc 8091:80
+oc --namespace a1b9b0-dev port-forward svc/dev-release-ab-airbyte-api-server-svc 8091:80
 ```
 
 View Minio object storage with this command: 
