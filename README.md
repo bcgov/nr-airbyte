@@ -11,8 +11,7 @@ helm install dev-release-ab .
 ```
 
 ## Notes: 
-Visit the application here (Use NRM.DataFoundations@gov.bc.ca as email): https://nr-airbyte-dev.apps.emerald.devops.gov.bc.ca
-or 
+Get the application running with this command (Use NRM.DataFoundations@gov.bc.ca as email):
 ```sh
 oc --namespace a1b9b0-dev port-forward svc/dev-release-ab-airbyte-webapp-svc 8090:80
 ```
@@ -25,6 +24,10 @@ oc --namespace a1b9b0-dev port-forward svc/dev-release-ab-airbyte-api-server-svc
 View Minio object storage with this command: 
 ```sh
 oc --namespace a1b9b0-dev port-forward pod/airbyte-minio-0 37373:37373
+```
+
+```sh
+helm upgrade -f values.yaml dev-release-ab . --version 0.48.0
 ```
 
 Access database via terminal using this command:
