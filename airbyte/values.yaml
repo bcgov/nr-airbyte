@@ -149,7 +149,7 @@ webapp:
     enabled: true
     initialDelaySeconds: 100
     periodSeconds: 10
-    timeoutSeconds: 5
+    timeoutSeconds: 10
     failureThreshold: 3
     successThreshold: 1
 
@@ -158,7 +158,7 @@ webapp:
     enabled: true
     initialDelaySeconds: 100
     periodSeconds: 10
-    timeoutSeconds: 5
+    timeoutSeconds: 10
     failureThreshold: 3
     # -- Success threshold for readinessProbe
     successThreshold: 1
