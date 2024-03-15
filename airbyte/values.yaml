@@ -1099,7 +1099,7 @@ postgresql:
     runAsNonRoot: true
   commonAnnotations:
     # -- It will determine when the hook should be rendered
-    helm.sh/hook: pre-install
+    helm.sh/hook: pre-install,pre-upgrade
     # -- The order in which the hooks are executed. If weight is lower, it has higher priority
     helm.sh/hook-weight: "-1"
   # -- Node labels for pod assignment, see https://kubernetes.io/docs/user-guide/node-selection/
