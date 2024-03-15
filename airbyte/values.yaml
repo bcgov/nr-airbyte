@@ -1,17 +1,16 @@
-### TEST FOR RELEASE WORKFLOW
+# Abi: most of the container images are coming from the Airbyte GHCR, nr-containers GHCR, or otherwise being redirected to to Artifactory Docker Hub proxy
 
-# Global params that are overwritten with umbrella chart
+##  global -- Global params that are overwritten with umbrella chart
 global:
-  # -- Service Account name override
-  serviceAccountName: &service-account-name "airbyte-admin"
-  # -- Deployment mode, whether or not render the default env vars and volumes in deployment spec
+  ##  serviceAccountName -- Service Account name override
+  serviceAccountName: &service-account-name "airbyte-admin" # Abi: this service account has an image pull secret attached to it
+  ##  deploymentMode -- Deployment mode, whether or not render the default env vars and volumes in deployment spec
   deploymentMode: "oss"
   # -- Edition; "community" or "pro"
   edition: "community"
-  # -- Log4j configuration file, if not using minio, update to "log4j2-no-minio.xml"
-  log4jConfig: "log4j2.xml"
-
-  # -- Environment variables
+  podLabels:
+    DataClass: Medium # Abi: 'Low' for app pods, 'Medium' for jobs
+    Release: test-release-ab # Abi: Release label is attached to nwp
   env_vars: {}
   # Database configuration override
   database:
@@ -22,6 +21,11 @@ global:
   # todo: remove so there is no need to create secrets for gcs if not using gcs
   storage:
     type: minio # default storage used
+
+          ## Abi: example of using external s3
+      ## enabled: true
+      ## bucket: bvtnvt
+      ## bucketRegion: us-east-1
 
   metrics:
     # -- The metric client to configure globally. Supports "otel"
@@ -35,18 +39,14 @@ global:
   # resources, such as Minikube.
   jobs:
     resources:
-      ## Example:
-      ## requests:
-      ##    memory: 256Mi
-      ##    cpu: 250m
-      # -- Job resource requests
-      requests: {}
-      ## Example:
-      ## limits:
-      ##    cpu: 200m
-      ##    memory: 1Gi
-      # -- Job resource limits
-      limits: {}
+      requests:
+        memory: '256Mi'
+        cpu: '50m'
+      ## requests: {}
+      limits:
+        cpu: '500m'
+        memory: '1Gi'
+      ## limits: {}
 
     kube:
       ## JOB_KUBE_ANNOTATIONS
@@ -56,8 +56,9 @@ global:
 
       ## JOB_KUBE_LABELS
       ## pod labels of the sync job and the default pod labels fallback for others jobs
-      # -- key/value labels applied to kube jobs
-      labels: {}
+      ##  jobs.kube.labels [object] key/value labels applied to kube jobs
+      labels: # Abi: 'Low' for app pods, 'Medium' or 'High' for jobs.
+        DataClass: Medium
 
       ## JOB_KUBE_NODE_SELECTORS
       ## pod node selector of the sync job and the default pod node selector fallback for others jobs
@@ -75,18 +76,25 @@ global:
 
       images:
         ## JOB_KUBE_BUSYBOX_IMAGE
-        # -- busybox image used by the job pod
-        busybox: ""
+        ## busybox image used by the job pod
+        ##   jobs.kube.images.busybox [string] busybox image used by the job pod
+        busybox: artifacts.developer.gov.bc.ca/docker-remote/busybox # Abi: Redirects to Artifactory Docker Hub proxy. Needed to not hit Docker Hub pull limit
         ## JOB_KUBE_SOCAT_IMAGE
-        # -- socat image used by the job pod
-        socat: ""
+        ## socat image used by the job pod
+        ##   jobs.kube.images.socat [string] socat image used by the job pod
+        socat: artifacts.developer.gov.bc.ca/docker-remote/alpine/socat # Abi: Redirects to Artifactory Docker Hub proxy. Needed to not hit Docker Hub pull limit
         ## JOB_KUBE_CURL_IMAGE
-        # -- curl image used by the job pod
-        curl: ""
+        ## curl image used by the job pod
+        ##   jobs.kube.images.curl [string] curl image used by the job pod
+        curl: artifacts.developer.gov.bc.ca/docker-remote/curlimages/curl # Abi: Redirects to Artifactory Docker Hub proxy. Needed to not hit Docker Hub pull limit
 
-## @section Common Parameters
+# Abi: for GitHub container registry
+  # image:
+    # registry: ghcr.io
+    # repository: bcgov/nr-containers/airbyte/[container]
+    # tag: [tag from FROM line in Dockerfile]
 
-# -- String to partially override airbyte.fullname template with a string (will prepend the release name)
+##  nameOverride -- String to partially override airbyte.fullname template with a string (will prepend the release name)
 nameOverride: ""
 # -- String to fully override airbyte.fullname template with a string
 fullnameOverride: ""
@@ -115,51 +123,42 @@ webapp:
   ##  webapp.image.pullPolicy
   ##  webapp.image.tag The airbyte webapp image tag. Defaults to the chart's AppVersion
   image:
-    # -- The repository to use for the airbyte webapp image
-    repository: airbyte/webapp
-    # -- The pull policy to use for the airbyte webapp image
-    pullPolicy: IfNotPresent
+  ## airbyte/webapp
+    # Abi: this is a custom Docker image with a container port of 8080 instead of 80
+    repository: ghcr.io/bcgov/nr-containers/airbyte/airbyte-web # image-registry .openshift-image-registry.svc:5000/a1b9b0-dev/airbyte-webapp-port-change@sha256:0a2a9306f9f39cc7f7f403584bd357ac3939843b938aa9919d223a72e5723b64
+    tag: null
+  pullPolicy: IfNotPresent
 
   # -- Add extra annotations to the webapp pods
   podAnnotations: {}
 
-  # -- webapp.podLabels [object] Add extra labels to the webapp pods
-  podLabels: {}
+  ##  webapp.podLabels [object] Add extra labels to the webapp pod(s)
+  podLabels: # Abi: 'Low' for app pods, 'Medium' for jobs
+    DataClass: Low
 
-  # -- Security context for the container
-  ## Examples:
-  ## containerSecurityContext:
-  ##    runAsNonRoot: true
-  ##    runAsUser: 1000
-  ##    readOnlyRootFilesystem: true
-  containerSecurityContext: {}
+  ##  webapp.containerSecurityContext Security context for the container
+  containerSecurityContext: # Abi: modified for OpenShift restricted scc
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+  ##  runAsUser: 1001870000
 
   ## Configure extra options for the webapp containers' liveness and readiness probes,
   ## see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
   livenessProbe:
     # -- Enable livenessProbe on the webapp
     enabled: true
-    # -- Initial delay seconds for livenessProbe
-    initialDelaySeconds: 30
-    # -- Period seconds for livenessProbe
+    initialDelaySeconds: 100
     periodSeconds: 10
-    # -- Timeout seconds for livenessProbe
-    timeoutSeconds: 1
-    # -- Failure threshold for livenessProbe
+    timeoutSeconds: 5
     failureThreshold: 3
-    # -- Success threshold for livenessProbe
     successThreshold: 1
 
   readinessProbe:
     # -- Enable readinessProbe on the webapp
     enabled: true
-    # -- Initial delay seconds for readinessProbe
-    initialDelaySeconds: 10
-    # -- Period seconds for readinessProbe
+    initialDelaySeconds: 100
     periodSeconds: 10
-    # -- Timeout seconds for readinessProbe
-    timeoutSeconds: 1
-    # -- Failure threshold for readinessProbe
+    timeoutSeconds: 5
     failureThreshold: 3
     # -- Success threshold for readinessProbe
     successThreshold: 1
@@ -235,30 +234,28 @@ webapp:
     # -- Whether or not to enable fullstory
     enabled: false
 
-  ## Examples (when using `webapp.containerSecurityContext.readOnlyRootFilesystem=true`):
-  ## extraVolumeMounts:
-  ##   - name: var-run
-  ##     mountPath: /var/run/
-  ##   - name: var-cache-nginx
-  ##     mountPath: /var/cache/nginx
-  ##   - mountPath: /etc/nginx/conf.d
-  ##     name: nginx-conf-d
-  ##
-  # -- Additional volumeMounts for webapp containers
-  extraVolumeMounts: []
+  ##  webapp.extraVolumeMounts [array] Additional volumeMounts for webapp container(s).
+  ##  Abi: enabled (when using `webapp.containerSecurityContext.readOnlyRootFilesystem=true`):
+  extraVolumeMounts:
+     - name: var-run
+       mountPath: /var/run/
+     - name: var-cache-nginx
+       mountPath: /var/cache/nginx
+     - mountPath: /etc/nginx/conf.d
+       name: nginx-conf-d
 
-  ## Examples (when using `webapp.containerSecurityContext.readOnlyRootFilesystem=true`):
-  ## extraVolumes:
-  ##   - name: var-run
-  ##     emptyDir: {}
-  ##   - name: var-cache-nginx
-  ##     emptyDir: {}
-  ##   - name: nginx-conf-d
-  ##     emptyDir: {}
-  # -- Additional volumes for webapp pods
-  extraVolumes: []
+  ##  webapp.extraVolumes [array] Additional volumes for webapp pod(s).
+  ## Abi: enabled (when using `webapp.containerSecurityContext.readOnlyRootFilesystem=true`):
+  extraVolumes:
+     - name: var-run
+       emptyDir: {}
+     - name: var-cache-nginx
+       emptyDir: {}
+     - name: nginx-conf-d
+       emptyDir: {}
 
-  ## Example:
+  ##  extraContainer [array] Additional container for server pod(s)
+
   # extraContainers:
   #   - name: otel_collector
   #     image: somerepo/someimage:sometag
@@ -274,7 +271,9 @@ webapp:
   # -- Additional container for server pods
   extraContainers: []
 
-  ## Example:
+  ##  extraInitContainers [array] Additional init containers for server pod(s)
+
+  # Abi: not using the connector builder, as it has issues with OpenShift restricted security context
   # extraInitContainers:
   #   - name: sleepy
   #     image: alpine
@@ -333,29 +332,34 @@ pod-sweeper:
     repository: bitnami/kubectl
     # -- The pull policy for the pod sweeper image
     pullPolicy: IfNotPresent
-    # -- The pod sweeper image tag to use
-    tag: 1.28.4
+    tag: latest
 
   # -- Add extra annotations to the podSweeper pod
   podAnnotations: {}
 
-  # -- Add extra labels to the podSweeper pod
-  podLabels: {}
+  ##  podSweeper.podLabels [object] Add extra labels to the podSweeper pod
+  ##
+  podLabels: # Abi: 'Low' for app pods, 'Medium' for jobs
+    DataClass: Low
 
-  ## Examples:
-  ## containerSecurityContext:
-  ##    runAsNonRoot: true
-  ##    runAsUser: 1000
-  ##    readOnlyRootFilesystem: true
-  # -- Security context for the container
-  containerSecurityContext: {}
+  ##  podSweeper.containerSecurityContext Security context for the container
+  containerSecurityContext: # Abi: modified for OpenShift restricted scc
+    runAsNonRoot: true
+  ##  runAsUser: 1001870000
 
+  ## Configure extra options for the podSweeper containers' liveness and readiness probes
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+  ##  podSweeper.livenessProbe.enabled Enable livenessProbe on the podSweeper
+  ##  podSweeper.livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+  ##  podSweeper.livenessProbe.periodSeconds Period seconds for livenessProbe
+  ##  podSweeper.livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+  ##  podSweeper.livenessProbe.failureThreshold Failure threshold for livenessProbe
+  ##  podSweeper.livenessProbe.successThreshold Success threshold for livenessProbe
+  ##
   livenessProbe:
     # -- Enable livenessProbe on the podSweeper
     enabled: true
-    # -- Initial delay seconds for livenessProbe
-    initialDelaySeconds: 5
-    # -- Period seconds for livenessProbe
+    initialDelaySeconds: 50 # Abi: extended
     periodSeconds: 30
     # -- Timeout seconds for livenessProbe
     timeoutSeconds: 1
@@ -367,9 +371,7 @@ pod-sweeper:
   readinessProbe:
     # -- Enable readinessProbe on the podSweeper
     enabled: true
-    # -- Initial delay seconds for readinessProbe
-    initialDelaySeconds: 5
-    # -- Period seconds for readinessProbe
+    initialDelaySeconds: 50 # Abi: extended
     periodSeconds: 30
     # -- Timeout seconds for readinessProbe
     timeoutSeconds: 1
@@ -437,25 +439,24 @@ server:
   # -- Add extra annotations to the server pods
   podAnnotations: {}
 
-  # -- Add extra labels to the server pods
-  podLabels: {}
+  ##  server.podLabels [object] Add extra labels to the server pod(s)
+  ##
+  podLabels: # Abi: 'Low' for app pods, 'Medium' for jobs
+    DataClass: Low
 
-  ## Examples:
-  ## containerSecurityContext:
-  ##    runAsNonRoot: true
-  ##    runAsUser: 1000
-  ##    readOnlyRootFilesystem: true
-  # -- Security context for the container
-  containerSecurityContext: {}
+  ##  server.containerSecurityContext Security context for the container
+  containerSecurityContext: # Abi: modified for OpenShift restricted scc
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+  ##  runAsUser: 100187000
+
 
   ## Configure extra options for the server containers' liveness and readiness probes
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
   livenessProbe:
     # -- Enable livenessProbe on the server
     enabled: true
-    # -- Initial delay seconds for livenessProbe
-    initialDelaySeconds: 30
-    # -- Period seconds for livenessProbe
+    initialDelaySeconds: 100
     periodSeconds: 10
     # -- Timeout seconds for livenessProbe
     timeoutSeconds: 10
@@ -467,9 +468,7 @@ server:
   readinessProbe:
     # -- Enable readinessProbe on the server
     enabled: true
-    # -- Initial delay seconds for readinessProbe
-    initialDelaySeconds: 10
-    # -- Period seconds for readinessProbe
+    initialDelaySeconds: 100
     periodSeconds: 10
     # -- Timeout seconds for readinessProbe
     timeoutSeconds: 10
@@ -512,21 +511,22 @@ server:
     # -- The log level to log at
     level: "INFO"
 
-  ## Examples (when using `server.containerSecurityContext.readOnlyRootFilesystem=true`):
-  ## extraVolumeMounts:
-  ##   - name: tmpdir
-  ##     mountPath: /tmp
-  # -- Additional volumeMounts for server containers
-  extraVolumeMounts: []
+  ##  server.extraVolumeMounts [array] Additional volumeMounts for server container(s).
+  ## Abi: enabled (when using `server.containerSecurityContext.readOnlyRootFilesystem=true`):
+  extraVolumeMounts:
+    - name: tmpdir
+      mountPath: /tmp
+  ##  extraVolumeMounts: []
 
-  ## Examples (when using `server.containerSecurityContext.readOnlyRootFilesystem=true`):
-  ## extraVolumes:
-  ##   - name: tmpdir
-  ##     emptyDir: {}
-  # -- Additional volumes for server pods
-  extraVolumes: []
+  ##  server.extraVolumes [array] Additional volumes for server pod(s).
+  ## Abi: enabled  (when using `server.containerSecurityContext.readOnlyRootFilesystem=true`):
+  extraVolumes:
+    - name: tmpdir
+      emptyDir: {}
+  ##  extraVolumes: []
 
-  ## Example:
+  ##  extraContainer [array] Additional container for server pod(s)
+
   # extraContainers:
   #   - name: otel_collector
   #     image: somerepo/someimage:sometag
@@ -601,31 +601,36 @@ worker:
   replicaCount: 1
 
   image:
-    # -- The repository to use for the airbyte worker image.
-    repository: airbyte/worker
-    # -- the pull policy to use for the airbyte worker image
+    repository: ghcr.io/bcgov/nr-containers/airbyte/airbyte-worker # image-registry.openshift-image-registry.svc:5000/a1b9b0-dev/airbyte-worker-modified@sha256:13e6667eb48b2eb1f94ec2ea44b44d1f738f82d1952451f67496a1da3f1b2e6c
     pullPolicy: IfNotPresent
 
   # -- Add extra annotations to the worker pods
   podAnnotations: {}
 
-  # -- Add extra labels to the worker pods
-  podLabels: {}
+  ##  worker.podLabels [object] Add extra labels to the worker pod(s)
+  ##
+  podLabels: # Abi: 'Low' for app pods, 'Medium' for jobs
+    DataClass: Low
 
-  ## Examples:
-  ## containerSecurityContext:
-  ##    runAsNonRoot: true
-  ##    runAsUser: 1000
-  ##    readOnlyRootFilesystem: true
-  # -- Security context for the container
-  containerSecurityContext: {}
+  ##  worker.containerSecurityContext Security context for the container
+  containerSecurityContext: # Abi: modified for OpenShift restricted scc
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+  ##  runAsUser: 1001870000
 
+  ## Configure extra options for the worker containers' liveness and readiness probes
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+  ##  worker.livenessProbe.enabled Enable livenessProbe on the worker
+  ##  worker.livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+  ##  worker.livenessProbe.periodSeconds Period seconds for livenessProbe
+  ##  worker.livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+  ##  worker.livenessProbe.failureThreshold Failure threshold for livenessProbe
+  ##  worker.livenessProbe.successThreshold Success threshold for livenessProbe
+  ##
   livenessProbe:
     # -- Enable livenessProbe on the worker
     enabled: true
-    # -- Initial delay seconds for livenessProbe
-    initialDelaySeconds: 30
-    # -- Period seconds for livenessProbe
+    initialDelaySeconds: 100
     periodSeconds: 10
     # -- Timeout seconds for livenessProbe
     timeoutSeconds: 1
@@ -637,9 +642,7 @@ worker:
   readinessProbe:
     # -- Enable readinessProbe on the worker
     enabled: true
-    # -- Initial delay seconds for readinessProbe
-    initialDelaySeconds: 10
-    # -- Period seconds for readinessProbe
+    initialDelaySeconds: 100
     periodSeconds: 10
     # -- Timeout seconds for readinessProbe
     timeoutSeconds: 1
@@ -688,153 +691,55 @@ worker:
   ## - name: JOB_KUBE_TOLERATIONS
   ##   value: "key=airbyte-server,operator=Equals,value=true,effect=NoSchedule"
   # -- Additional env vars for worker pods
-  extraEnv: []
+  extraEnv: 
+    # Abi: Fine-tuned resource limits for replication jobs
+    JOB_MAIN_CONTAINER_CPU_REQUEST: 50m
+    JOB_MAIN_CONTAINER_CPU_LIMIT: 100m
+    JOB_MAIN_CONTAINER_MEMORY_REQUEST: 200Mi
+    JOB_MAIN_CONTAINER_MEMORY_LIMIT: 300Mi
+    NORMALIZATION_JOB_MAIN_CONTAINER_CPU_REQUEST: 50m
+    NORMALIZATION_JOB_MAIN_CONTAINER_CPU_LIMIT: 100m
+    NORMALIZATION_JOB_MAIN_CONTAINER_MEMORY_REQUEST: 200Mi
+    NORMALIZATION_JOB_MAIN_CONTAINER_MEMORY_LIMIT: 300Mi
+    CHECK_JOB_MAIN_CONTAINER_CPU_REQUEST: 50m
+    CHECK_JOB_MAIN_CONTAINER_CPU_LIMIT: 100m
+    CHECK_JOB_MAIN_CONTAINER_MEMORY_REQUEST: 200Mi
+    CHECK_JOB_MAIN_CONTAINER_MEMORY_LIMIT: 300Mi
+    REPLICATION_ORCHESTRATOR_CPU_REQUEST: 50m
+    REPLICATION_ORCHESTRATOR_CPU_LIMIT: 100m
+    SIDECAR_KUBE_CPU_LIMIT: 100m
+    SIDECAR_KUBE_CPU_REQUEST: 50m
+    SOCAT_KUBE_CPU_LIMIT: 100m
+    SOCAT_KUBE_CPU_REQUEST: 50m
+    SIDECAR_KUBE_MEMORY_LIMIT: 300Mi
+    SOCAT_KUBE_MEMORY_LIMIT: 300Mi
+    # Abi: 'Low' for app pods, 'Medium' for jobs
+    CHECK_JOB_KUBE_LABELS: "DataClass=Medium"
+    SPEC_JOB_KUBE_LABELS: "DataClass=Medium"
+    DISCOVER_JOB_KUBE_LABELS: "DataClass=Medium"
+    NORMALIZATION_JOB_KUBE_LABELS: "DataClass=Medium"
+    REPLICATION_JOB_KUBE_LABELS: "DataClass=Medium"  
 
-  ## Examples (when using `worker.containerSecurityContext.readOnlyRootFilesystem=true`):
-  ## extraVolumeMounts:
-  ##   - name: tmpdir
-  ##     mountPath: /tmp
-  # -- Additional volumeMounts for worker containers
-  extraVolumeMounts: []
+  ##  worker.extraVolumeMounts [array] Additional volumeMounts for worker container(s).
+  ## Abi: enabled (when using `worker.containerSecurityContext.readOnlyRootFilesystem=true`):
+  extraVolumeMounts:
+    - name: tmpdir
+      mountPath: /tmp
 
-  ## Examples (when using `worker.containerSecurityContext.readOnlyRootFilesystem=true`):
-  ## extraVolumes:
-  ##   - name: tmpdir
-  ##     emptyDir: {}
-  # -- Additional volumes for worker pods
-  extraVolumes: []
-  # -- Additional container for worker pods
-  extraContainers: []
+  ##  extraVolumeMounts: []
 
-  hpa:
-    enabled: false
+  ##  worker.extraVolumes [array] Additional volumes for worker pod(s).
+  ## Abi: enabled (when using `worker.containerSecurityContext.readOnlyRootFilesystem=true`):
+  extraVolumes:
+    - name: tmpdir
+      emptyDir: {}
 
-  debug:
-    enabled: false
-
-  containerOrchestrator:
-    # -- Orchestrator image
-    image: ""
-
-  ## current no exist documentations
-  activityMaxAttempt: ""
-  activityInitialDelayBetweenAttemptsSeconds: ""
-  activityMaxDelayBetweenAttemptsSeconds: ""
-  maxNotifyWorkers: 5
-
-## @section Workload Launcher Parameters
-
-workload-launcher:
-  enabled: false
-  # -- Number of workload launcher replicas
-  replicaCount: 1
-
-  image:
-    # -- The repository to use for the airbyte workload launcher image.
-    repository: airbyte/workload-launcher
-    # -- The pull policy to use for the airbyte workload launcher image
-    pullPolicy: IfNotPresent
-
-  # -- Add extra annotations to the workload launcher pods
-  podAnnotations: {}
-
-  # -- Add extra labels to the workload launcher pods
-  podLabels: {}
-
-  ## Examples:
-  ## containerSecurityContext:
-  ##    runAsNonRoot: true
-  ##    runAsUser: 1000
-  ##    readOnlyRootFilesystem: true
-  # -- Security context for the container
-  containerSecurityContext: {}
-
-  livenessProbe:
-    # -- Enable livenessProbe on the workload launcher
-    enabled: true
-    # -- Initial delay seconds for livenessProbe
-    initialDelaySeconds: 30
-    # -- Period seconds for livenessProbe
-    periodSeconds: 10
-    # -- Timeout seconds for livenessProbe
-    timeoutSeconds: 1
-    # -- Failure threshold for livenessProbe
-    failureThreshold: 3
-    # -- Success threshold for livenessProbe
-    successThreshold: 1
-
-  readinessProbe:
-    # -- Enable readinessProbe on the workload launcher
-    enabled: true
-    # -- Initial delay seconds for readinessProbe
-    initialDelaySeconds: 10
-    # -- Period seconds for readinessProbe
-    periodSeconds: 10
-    # -- Timeout seconds for readinessProbe
-    timeoutSeconds: 1
-    # -- Failure threshold for readinessProbe
-    failureThreshold: 3
-    # -- Success threshold for readinessProbe
-    successThreshold: 1
-
-  ## workload launcher resource requests and limits
-  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
-  ## We usually recommend not to specify default resources and to leave this as a conscious
-  ## choice for the user. This also increases chances charts run on environments with little
-  ## resources, such as Minikube. If you do want to specify resources, uncomment the following
-  ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  resources:
-    ## Example:
-    ## limits:
-    ##    cpu: 200m
-    ##    memory: 1Gi
-    # -- The resources limits for the workload launcher container
-    limits: {}
-    ## Examples:
-    ## requests:
-    ##    memory: 256Mi
-    ##    cpu: 250m
-    # -- The requested resources for the workload launcher container
-    requests: {}
-
-  # -- Node labels for pod assignment, see https://kubernetes.io/docs/user-guide/node-selection/
-  nodeSelector: {}
-
-  # -- Tolerations for workload launcher pod assignment, see https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-  tolerations: []
-
-  # Affinity and anti-affinity for workload launcher pod assignment, see
-  # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
-  affinity: {}
-
-  log:
-    # -- The log level to log at
-    level: "INFO"
-
-  ## Example:
-  ##
-  ## extraEnv:
-  ## - name: JOB_KUBE_TOLERATIONS
-  ##   value: "key=airbyte-server,operator=Equals,value=true,effect=NoSchedule"
-  # -- Additional env vars for workload launcher pods
-  extraEnv: []
-
-  ## Examples (when using `workload launcher.containerSecurityContext.readOnlyRootFilesystem=true`):
-  ## extraVolumeMounts:
-  ##   - name: tmpdir
-  ##     mountPath: /tmp
-  # -- Additional volumeMounts for workload launcher containers
-  extraVolumeMounts: []
-
-  ## Examples (when using `workload-launcher.containerSecurityContext.readOnlyRootFilesystem=true`):
-  ## extraVolumes:
-  ##   - name: tmpdir
-  ##     emptyDir: {}
-  # -- Additional volumes for workload launcher pods
-  extraVolumes: []
+  ##  extraVolumes: []
 
   extraContainers: []
 
+
+## Abi: will use this in prod
   hpa:
     enabled: false
 
@@ -870,16 +775,16 @@ metrics:
   # -- Add extra annotations to the metrics-reporter pod
   podAnnotations: {}
 
-  # -- Add extra labels to the metrics-reporter pod
-  podLabels: {}
+  ##  metrics.podLabels [object] Add extra labels to the metrics-reporter pod
+  ##
+  podLabels: # Abi: 'Low' for app pods, 'Medium' for jobs
+    DataClass: Low
 
-  ## Examples:
-  ## containerSecurityContext:
-  ##    runAsNonRoot: true
-  ##    runAsUser: 1000
-  ##    readOnlyRootFilesystem: true
-  # -- Security context for the container
-  containerSecurityContext: {}
+  ##  metrics.containerSecurityContext Security context for the container
+  containerSecurityContext: # Abi: modified for OpenShift restricted scc
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+  ##  runAsUser: 1001870000
 
   ## metrics-reporter app resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
@@ -919,19 +824,19 @@ metrics:
   # -- Additional env vars for metrics-reporter pods
   extraEnv: []
 
-  ## Examples (when using `metrics.containerSecurityContext.readOnlyRootFilesystem=true`):
-  ## extraVolumeMounts:
-  ##   - name: tmpdir
-  ##     mountPath: /tmp
-  # -- Additional volumeMounts for metrics-reporter containers
-  extraVolumeMounts: []
+  ##  metrics.extraVolumeMounts [array] Additional volumeMounts for metrics-reporter container(s).
+  ## Abi: enabled (when using `metrics.containerSecurityContext.readOnlyRootFilesystem=true`):
+  extraVolumeMounts:
+    - name: tmpdir
+      mountPath: /tmp
+  ##  extraVolumeMounts: []
 
-  ## Examples (when using `metrics.containerSecurityContext.readOnlyRootFilesystem=true`):
-  ## extraVolumes:
-  ##   - name: tmpdir
-  ##     emptyDir: {}
-  # -- Additional volumes for metrics-reporter pods
-  extraVolumes: []
+  ##  metrics.extraVolumes [array] Additional volumes for metrics-reporter pod(s).
+  ## Abi: enabled (when using `metrics.containerSecurityContext.readOnlyRootFilesystem=true`):
+  extraVolumes:
+    - name: tmpdir
+      emptyDir: {}
+  ##  extraVolumes: []
 
   extraContainers: []
 
@@ -952,8 +857,10 @@ airbyte-bootloader:
   # -- Add extra annotations to the bootloader pod
   podAnnotations: {}
 
-  # -- Add extra labels to the bootloader pod
-  podLabels: {}
+  ##  podLabels [object] Add extra labels to the bootloader pod
+  ##
+  podLabels: # Abi: 'Low' for app pods, 'Medium' for jobs
+    DataClass: Low
 
   # -- Node labels for pod assignment, see https://kubernetes.io/docs/user-guide/node-selection/
   nodeSelector: {}
@@ -1056,22 +963,19 @@ airbyte-bootloader:
   # -- Additional init containers for server pods
   extraInitContainers: []
 
-  ## Examples (when using `containerSecurityContext.readOnlyRootFilesystem=true`):
-  ## extraVolumeMounts:
-  ##   - name: tmpdir
-  ##     mountPath: /tmp
-  # -- Additional volumeMounts for server containers
-  extraVolumeMounts: []
+  ##  extraVolumeMounts [array] Additional volumeMounts for server container(s).
+  ## Abi: enabled (when using `containerSecurityContext.readOnlyRootFilesystem=true`):
+  extraVolumeMounts:
+    - name: tmpdir
+      mountPath: /tmp
+  ##    extraVolumeMounts: []
 
-  ## Examples (when using `containerSecurityContext.readOnlyRootFilesystem=true`):
-  ## extraVolumes:
-  ##   - name: tmpdir
-  ##     emptyDir: {}
-  # -- Additional volumes for server pods
-  extraVolumes: []
-
-## @section Temporal parameters
-## TODO: Move to consuming temporal from a dedicated helm chart
+  ##  extraVolumes [array] Additional volumes for server pod(s).
+  ## Abi: enabled (when using `containerSecurityContext.readOnlyRootFilesystem=true`):
+  extraVolumes:
+    - name: tmpdir
+      emptyDir: {}
+  ##  extraVolumes: []
 
 temporal:
   enabled: true
@@ -1079,9 +983,9 @@ temporal:
   replicaCount: 1
 
   image:
-    # -- The temporal image repository to use
-    repository: temporalio/auto-setup
-    # -- The pull policy for the temporal image
+
+    # Abi: things can break depending on the version of this Temporalio dependency. If the issue resurfaces, we can look at https://github.com/airbytehq/airbyte/issues/8849
+    repository: artifacts.developer.gov.bc.ca/docker-remote/temporalio/auto-setup # image-registry.openshift-image-registry.svc:5000/a1b9b0-dev/auto-setup@sha256:64467fa9d2767fc041566c29cc356edb61263e1b592e82abd70e5d450dbd862c
     pullPolicy: IfNotPresent
     # -- The temporal image tag to use
     tag: "1.20.1"
@@ -1095,32 +999,41 @@ temporal:
   # -- Add extra annotations to the temporal pod
   podAnnotations: {}
 
-  # -- Add extra labels to the temporal pod
-  podLabels: {}
+  ##  temporal.podLabels [object] Add extra labels to the temporal pod
+  ##
+  podLabels: # Abi: 'Low' for app pods, 'Medium' for jobs
+    DataClass: Low
 
-  ## Examples:
-  ## containerSecurityContext:
-  ##    runAsNonRoot: true
-  ##    runAsUser: 1000
-  ##    readOnlyRootFilesystem: true
-  # -- Security context for the container
-  containerSecurityContext: {}
+  ##  temporal.containerSecurityContext Security context for the container
+  containerSecurityContext: # Abi: modified for OpenShift restricted scc
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+  ##  runAsUser: 1001870000
 
-  ## Examples (when using `temporal.containerSecurityContext.readOnlyRootFilesystem=true`):
-  ## extraInitContainers:
-  ##   - name: config-loader
-  ##     image: temporalio/auto-setup:1.20.1
-  ##     command:
-  ##       - /bin/sh
-  ##       - -c
-  ##       - >-
-  ##         find /etc/temporal/config/ -maxdepth 1 -mindepth 1 -exec cp -ar {} /config/ \;
-  ##     volumeMounts:
-  ##       - name: config
-  ##         mountPath: /config
-  # -- Additional InitContainers to initialize the pod
-  extraInitContainers: []
+  ##  temporal.extraInitContainers Additional InitContainers to initialize the pod
+  ## Abi: enabled (when using `temporal.containerSecurityContext.readOnlyRootFilesystem=true`):
+  extraInitContainers:
+     - name: config-loader
+       image: artifacts.developer.gov.bc.ca/docker-remote/temporalio/auto-setup # image-registry.openshift-image-registry.svc:5000/a1b9b0-dev/auto-setup@sha256:64467fa9d2767fc041566c29cc356edb61263e1b592e82abd70e5d450dbd862c
+       command:
+         - /bin/sh
+         - -c
+         - >-
+           find /etc/temporal/config/ -maxdepth 1 -mindepth 1 -exec cp -ar {} /config/ \;
+       volumeMounts:
+         - name: config
+           mountPath: /config
 
+
+  ## Configure extra options for the temporal containers' liveness and readiness probes
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+  ##  temporal.livenessProbe.enabled Enable livenessProbe on the temporal
+  ##  temporal.livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+  ##  temporal.livenessProbe.periodSeconds Period seconds for livenessProbe
+  ##  temporal.livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+  ##  temporal.livenessProbe.failureThreshold Failure threshold for livenessProbe
+  ##  temporal.livenessProbe.successThreshold Success threshold for livenessProbe
+  ##
   livenessProbe:
     # -- Enable livenessProbe on the temporal
     enabled: false
@@ -1147,23 +1060,23 @@ temporal:
   # -- Additional env vars for temporal pod(s).
   extraEnv: []
 
-  ## Examples (when using `temporal.containerSecurityContext.readOnlyRootFilesystem=true`):
-  ## extraVolumeMounts:
-  ##   - name: tmpdir
-  ##     mountPath: /tmp
-  ##   - name: config
-  ##     mountPath: /etc/temporal/config
-  # -- Additional volumeMounts for temporal containers
-  extraVolumeMounts: []
+  ##  temporal.extraVolumeMounts [array] Additional volumeMounts for temporal container(s).
+  ## Abi: enabled (when using `temporal.containerSecurityContext.readOnlyRootFilesystem=true`):
+  extraVolumeMounts:
+     - name: tmpdir
+       mountPath: /tmp
+     - name: config
+       mountPath: /etc/temporal/config
 
-  ## Examples (when using `temporal.containerSecurityContext.readOnlyRootFilesystem=true`):
-  ## extraVolumes:
-  ##   - name: tmpdir
-  ##     emptyDir: {}
-  ##  - name: config
-  ##    emptyDir: {}
-  # -- Additional volumes for temporal pods
-  extraVolumes: []
+
+  ##  temporal.extraVolumes [array] Additional volumes for temporal pod(s).
+  ## Abi: enabled (when using `temporal.containerSecurityContext.readOnlyRootFilesystem=true`):
+  extraVolumes:
+    - name: tmpdir
+      emptyDir: {}
+    - name: config
+      emptyDir: {}
+
 
   ## Temporal resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
@@ -1249,7 +1162,7 @@ externalDatabase:
 minio:
   image:
     # -- Minio image used by Minio helm chart
-    repository: minio/minio
+    repository: artifacts.developer.gov.bc.ca/docker-remote/minio/minio # image-registry.openshift-image-registry.svc:5000/a1b9b0-dev/minio@sha256:7a0fc961ebd7baa1ec89c8ce93920d1a8def1506aafec6c72d112acf0be71048
     # -- Minio tag image
     tag: RELEASE.2023-11-20T22-40-07Z
 
@@ -1283,17 +1196,25 @@ cron:
   # -- Add extra annotations to the cron pods
   podAnnotations: {}
 
-  # -- Add extra labels to the cron pods
-  podLabels: {}
+  ##  cron.podLabels [object] Add extra labels to the cron pod(s)
+  ##
+  podLabels: # Abi: 'Low' for app pods, 'Medium' for jobs
+    DataClass: Low
+  ##  cron.containerSecurityContext Security context for the container
+  containerSecurityContext: # Abi: modified for OpenShift restricted scc
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+  ##  runAsUser: 1001870000
 
-  ## Examples:
-  ## containerSecurityContext:
-  ##    runAsNonRoot: true
-  ##    runAsUser: 1000
-  ##    readOnlyRootFilesystem: true
-  # -- Security context for the container
-  containerSecurityContext: {}
-
+  ## Configure extra options for the cron containers' liveness and readiness probes
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+  ##  cron.livenessProbe.enabled Enable livenessProbe on the cron
+  ##  cron.livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+  ##  cron.livenessProbe.periodSeconds Period seconds for livenessProbe
+  ##  cron.livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+  ##  cron.livenessProbe.failureThreshold Failure threshold for livenessProbe
+  ##  cron.livenessProbe.successThreshold Success threshold for livenessProbe
+  ##
   livenessProbe:
     # -- Enable livenessProbe on the cron
     enabled: true
@@ -1356,21 +1277,22 @@ cron:
     # -- The log level to log at.
     level: "INFO"
 
-  ## Examples (when using `cron.containerSecurityContext.readOnlyRootFilesystem=true`):
-  ## extraVolumeMounts:
-  ##   - name: tmpdir
-  ##     mountPath: /tmp
-  # -- Additional volumeMounts for cron containers
-  extraVolumeMounts: []
+  ##  cron.extraVolumeMounts [array] Additional volumeMounts for cron container(s).
+  ## Abi: enabled (when using `cron.containerSecurityContext.readOnlyRootFilesystem=true`):
+  extraVolumeMounts:
+    - name: tmpdir
+      mountPath: /tmp
+  ##  extraVolumeMounts: []
 
-  ## Examples (when using `cron.containerSecurityContext.readOnlyRootFilesystem=true`):
-  ## extraVolumes:
-  ##   - name: tmpdir
-  ##     emptyDir: {}
-  # -- Additional volumes for cron pods
-  extraVolumes: []
+  ##  cron.extraVolumes [array] Additional volumes for cron pod(s).
+  ## Abi: enabled (when using `cron.containerSecurityContext.readOnlyRootFilesystem=true`):
+  extraVolumes:
+    - name: tmpdir
+      emptyDir: {}
+  ##  extraVolumes: []
 
-  ## Example:
+  ##  extraContainer [array] Additional container for cron pod(s)
+
   # extraContainers:
   #   - name: otel_collector
   #     image: somerepo/someimage:sometag
@@ -1394,7 +1316,8 @@ cron:
   # -- Additional init containers for cron pods
   extraInitContainers: []
 
-  ## Example: (With default env vars and values taken from generated config map)
+  ##  extraEnv [array] Supply extra env variables to main container using full notation
+  ## Abi: enabled (With default env vars and values taken from generated config map)
   # extraEnv:
   #   - name: AIRBYTE_VERSION
   #     valueFrom:
@@ -1450,9 +1373,7 @@ connector-builder-server:
   livenessProbe:
     # -- Enable livenessProbe on the server
     enabled: true
-    # -- Initial delay seconds for livenessProbe
-    initialDelaySeconds: 30
-    # -- Period seconds for livenessProbe
+    initialDelaySeconds: 100 # Abi: extended
     periodSeconds: 10
     # -- Timeout seconds for livenessProbe
     timeoutSeconds: 10
@@ -1464,9 +1385,7 @@ connector-builder-server:
   readinessProbe:
     # -- Enable readinessProbe on the server
     enabled: true
-    # -- Initial delay seconds for readinessProbe
-    initialDelaySeconds: 10
-    # -- Period seconds for readinessProbe
+    initialDelaySeconds: 100 # Abi: extended
     periodSeconds: 10
     # -- Timeout seconds for readinessProbe
     timeoutSeconds: 10
@@ -1517,9 +1436,7 @@ airbyte-api-server:
   livenessProbe:
     # -- Enable livenessProbe on the server
     enabled: true
-    # -- Initial delay seconds for livenessProbe
-    initialDelaySeconds: 30
-    # -- Period seconds for livenessProbe
+    initialDelaySeconds: 100 # Abi: extended
     periodSeconds: 10
     # -- Timeout seconds for livenessProbe
     timeoutSeconds: 10
@@ -1531,9 +1448,7 @@ airbyte-api-server:
   readinessProbe:
     # -- Enable readinessProbe on the server
     enabled: true
-    # -- Initial delay seconds for readinessProbe
-    initialDelaySeconds: 10
-    # -- Period seconds for readinessProbe
+    initialDelaySeconds: 100 # Abi: extended
     periodSeconds: 10
     # -- Timeout seconds for readinessProbe
     timeoutSeconds: 10
@@ -1549,21 +1464,20 @@ airbyte-api-server:
   ## resources, such as Minikube. If you do want to specify resources, uncomment the following
   ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   resources:
-    ## Example:
-    ## limits:
-    ##    cpu: 200m
-    ##    memory: 1Gi
-    # -- The resources limits for the airbyte-api-server container
-    limits: {}
-    ## Examples:
-    ## requests:
-    ##    memory: 256Mi
-    ##    cpu: 250m
-    ## - The requested resources for the airbyte-api-server container
-    requests: {}
 
+  ## Abi: increased resource limits so that we can trigger jobs (from Airflow) with the API, probably too high but haven't found the ideal limits yet
+    limits:
+      cpu: 2
+      memory: 2Gi
+    # limits: {}
+    requests:
+      memory: 1Gi
+      cpu: 1
+    # requests: {}
+
+
+  ##  airbyte-api-server.log.level The log level to log at.
   log:
-    # -- The log level to log at.
     level: "INFO"
 
   env_vars: {}
