@@ -53,7 +53,7 @@ spec:
       {{- end }}
       containers:
       - name: airbyte-webapp-container
-        image: image-registry.openshift-image-registry.svc:5000/a1b9b0-dev/airbyte-webapp-port-change@sha256:0a2a9306f9f39cc7f7f403584bd357ac3939843b938aa9919d223a72e5723b64
+        image: {{ printf "%s:%s" .Values.image.repository (include "webapp.imageTag" .) }}
         imagePullPolicy: "{{ .Values.image.pullPolicy }}"
         env:
         {{- if eq .Values.global.deploymentMode "oss"  }}
@@ -131,7 +131,7 @@ spec:
         {{- if .Values.readinessProbe.enabled }}
         readinessProbe:
           httpGet:
-            path: /api/v1/health
+            path: /index.html
             port: http
           initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
           periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
@@ -141,7 +141,7 @@ spec:
         {{- end }}
         ports:
         - name: http
-          containerPort: 8080
+          containerPort: 80
           protocol: TCP
         {{- if .Values.resources }}
         resources: {{- toYaml .Values.resources | nindent 10 }}

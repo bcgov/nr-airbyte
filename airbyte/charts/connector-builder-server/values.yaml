@@ -6,7 +6,7 @@ global:
   secretName: ""
   credVolumeOverride: ""
   extraContainers: []
-  ## extraSelectorLables [object] - use to specify own additional selector labels for deployment
+  ## extraSelectorLabels [object] - use to specify own additional selector labels for deployment
   extraSelectorLabels: {}
   ## extraLabels [object] - use to specify own additional labels for deployment
   extraLabels: {}
@@ -15,7 +15,7 @@ global:
     secretValue: ""
     host: "example.com"
     port: "5432"
-
+    
 enabled: true
 ##  replicaCount Number of server replicas
 replicaCount: 1
