@@ -601,7 +601,7 @@ worker:
   replicaCount: 1
 
   image:
-    repository: airbyte/airbyte-worker # image-registry.openshift-image-registry.svc:5000/a1b9b0-dev/airbyte-worker-modified@sha256:13e6667eb48b2eb1f94ec2ea44b44d1f738f82d1952451f67496a1da3f1b2e6c
+    repository: airbyte/worker # image-registry.openshift-image-registry.svc:5000/a1b9b0-dev/airbyte-worker-modified@sha256:13e6667eb48b2eb1f94ec2ea44b44d1f738f82d1952451f67496a1da3f1b2e6c
     pullPolicy: IfNotPresent
 
   # -- Add extra annotations to the worker pods
@@ -691,58 +691,8 @@ worker:
   ## - name: JOB_KUBE_TOLERATIONS
   ##   value: "key=airbyte-server,operator=Equals,value=true,effect=NoSchedule"
   # -- Additional env vars for worker pods
-  extraEnv: 
-    # Abi: Fine-tuned resource limits for replication jobs
-    - name: CHECK_JOB_KUBE_LABELS
-      value: DataClass=Medium
-    - name: CHECK_JOB_MAIN_CONTAINER_CPU_LIMIT
-      value: 100m
-    - name: CHECK_JOB_MAIN_CONTAINER_CPU_REQUEST
-      value: 50m
-    - name: CHECK_JOB_MAIN_CONTAINER_MEMORY_LIMIT
-      value: 300Mi
-    - name: CHECK_JOB_MAIN_CONTAINER_MEMORY_REQUEST
-      value: 200Mi
-    - name: DISCOVER_JOB_KUBE_LABELS
-      value: DataClass=Medium
-    - name: JOB_MAIN_CONTAINER_CPU_LIMIT
-      value: 100m
-    - name: JOB_MAIN_CONTAINER_CPU_REQUEST
-      value: 50m
-    - name: JOB_MAIN_CONTAINER_MEMORY_LIMIT
-      value: 300Mi
-    - name: JOB_MAIN_CONTAINER_MEMORY_REQUEST
-      value: 200Mi
-    - name: NORMALIZATION_JOB_KUBE_LABELS
-      value: DataClass=Medium
-    - name: NORMALIZATION_JOB_MAIN_CONTAINER_CPU_LIMIT
-      value: 100m
-    - name: NORMALIZATION_JOB_MAIN_CONTAINER_CPU_REQUEST
-      value: 50m
-    - name: NORMALIZATION_JOB_MAIN_CONTAINER_MEMORY_LIMIT
-      value: 300Mi
-    - name: NORMALIZATION_JOB_MAIN_CONTAINER_MEMORY_REQUEST
-      value: 200Mi
-    - name: REPLICATION_JOB_KUBE_LABELS
-      value: DataClass=Medium
-    - name: REPLICATION_ORCHESTRATOR_CPU_LIMIT
-      value: 100m
-    - name: REPLICATION_ORCHESTRATOR_CPU_REQUEST
-      value: 50m
-    - name: SPEC_JOB_KUBE_LABELS
-      value: DataClass=Medium
-    - name: SIDECAR_KUBE_CPU_LIMIT
-      value: 100m
-    - name: SIDECAR_KUBE_CPU_REQUEST
-      value: 50m
-    - name: SOCAT_KUBE_CPU_LIMIT
-      value: 100m
-    - name: SOCAT_KUBE_CPU_REQUEST
-      value: 50m
-    - name: SOCAT_KUBE_MEMORY_LIMIT
-      value: 300Mi
-    - name: SIDECAR_KUBE_MEMORY_LIMIT
-      value: 300Mi
+  extraEnv: []
+    
 
   ##  worker.extraVolumeMounts [array] Additional volumeMounts for worker container(s).
   ## Abi: enabled (when using `worker.containerSecurityContext.readOnlyRootFilesystem=true`):
