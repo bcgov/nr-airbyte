@@ -601,7 +601,7 @@ worker:
   replicaCount: 1
 
   image:
-    repository: ghcr.io/bcgov/nr-containers/airbyte/airbyte-worker # image-registry.openshift-image-registry.svc:5000/a1b9b0-dev/airbyte-worker-modified@sha256:13e6667eb48b2eb1f94ec2ea44b44d1f738f82d1952451f67496a1da3f1b2e6c
+    repository: airbyte/airbyte-worker # image-registry.openshift-image-registry.svc:5000/a1b9b0-dev/airbyte-worker-modified@sha256:13e6667eb48b2eb1f94ec2ea44b44d1f738f82d1952451f67496a1da3f1b2e6c
     pullPolicy: IfNotPresent
 
   # -- Add extra annotations to the worker pods
