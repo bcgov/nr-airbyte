@@ -13,55 +13,7 @@ global:
   database:
     secretName: ""
     secretValue: ""
-    host: "example.com"
-    port: "5432"
-  logs:
-    ##  logs.accessKey.password Logs Access Key
-    ##  logs.accessKey.existingSecret
-    ##  logs.accessKey.existingSecretKey
-    accessKey:
-      password: minio
-      existingSecret: ""
-      existingSecretKey: ""
-    ##  logs.secretKey.password Logs Secret Key
-    ##  logs.secretKey.existingSecret
-    ##  logs.secretKey.existingSecretKey
-    secretKey:
-      password: minio123
-      existingSecret: ""
-      existingSecretKey: ""
 
-    ##  logs.minio.enabled Switch to enable or disable the Minio helm chart
-    minio:
-      enabled: true
-
-    ##  logs.externalMinio.enabled Switch to enable or disable an external Minio instance
-    ##  logs.externalMinio.host External Minio Host
-    ##  logs.externalMinio.port External Minio Port
-    externalMinio:
-      enabled: false
-      host: localhost
-      port: 9000
-
-    ##  logs.s3.enabled Switch to enable or disable custom S3 Log location
-    ##  logs.s3.bucket Bucket name where logs should be stored
-    ##  logs.s3.bucketRegion Region of the bucket (must be empty if using minio)
-    s3:
-      enabled: false
-      bucket: airbyte-dev-logs
-      bucketRegion: ""
-
-    ## Google Cloud Storage (GCS) Log Location Configuration
-    ##  logs.gcs.bucket GCS bucket name
-    ##  logs.gcs.credentials The path the GCS creds are written to
-    ##  logs.gcs.credentialsJson Base64 encoded json GCP credentials file contents
-    gcs:
-      bucket: ""
-      # If you are mounting an existing secret to extraVolumes on scheduler, server and worker
-      # deployments, then set credentials to the path of the mounted JSON file
-      credentials: ""
-      # If credentialsJson is set then credentials auto resolves (to /secrets/gcs-log-creds/gcp.json)
-      credentialsJson: ""
 enabled: true
 ##  replicaCount Number of server replicas
 replicaCount: 1

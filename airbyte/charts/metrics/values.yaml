@@ -6,8 +6,7 @@ global:
   database:
     secretName: ""
     secretValue: ""
-    host: "example.com"
-    port: "5432"
+
 enabled: true
 ##  metrics.replicaCount Number of metrics-reporter replicas
 replicaCount: 1

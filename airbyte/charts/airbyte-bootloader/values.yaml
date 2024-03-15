@@ -10,8 +10,6 @@ global:
   database:
     secretName: ""
     secretValue: ""
-    host: "example.com"
-    port: "5432"
   secrets: {}
   env_vars: {}
   extraContainers: []

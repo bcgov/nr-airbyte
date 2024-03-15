@@ -9,8 +9,6 @@ global:
   database:
     secretName: ""
     secretValue: ""
-    host: "example.com"
-    port: "5432"
   logs:
     ##  logs.accessKey.password Logs Access Key
     ##  logs.accessKey.existingSecret
@@ -30,11 +28,7 @@ global:
     ##  logs.minio.enabled Switch to enable or disable the Minio helm chart
     minio:
       enabled: true
-      
-    externalMinio:
-      enabled: false
-      host: localhost
-      port: 9000
+
     ##  logs.s3.enabled Switch to enable or disable custom S3 Log location
     ##  logs.s3.bucket Bucket name where logs should be stored
     ##  logs.s3.bucketRegion Region of the bucket (must be empty if using minio)
