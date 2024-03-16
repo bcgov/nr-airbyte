@@ -1,0 +1,23 @@
+apiVersion: kyverno.io/v1
+kind: Policy
+metadata:
+  name: stateful-set-labels
+spec:
+  background: false
+  failurePolicy: Ignore
+  rules:
+    - match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              selector:
+                matchLabels:
+                  app.kubernetes.io/instance: dev-release-airbyte
+      mutate:
+        patchStrategicMerge:
+          metadata:
+            labels:
+              DataClass: Medium
+      name: add-job-data-class-label
+  validationFailureAction: audit
