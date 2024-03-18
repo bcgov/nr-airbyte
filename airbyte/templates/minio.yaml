@@ -94,6 +94,9 @@ metadata:
   annotations:
     "helm.sh/hook": post-install, post-upgrade
     "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
+  label:
+    DataClass: Low
+  
 spec:
   restartPolicy: OnFailure
   containers:
