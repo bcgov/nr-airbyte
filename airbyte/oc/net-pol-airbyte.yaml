@@ -1,0 +1,15 @@
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-traffic-airbyte
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: dev-release-airbyte
+  ingress:
+    - {}
+  egress:
+    - {}
+  policyTypes:
+    - Ingress
+    - Egress

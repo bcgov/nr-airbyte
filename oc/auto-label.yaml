@@ -1,0 +1,23 @@
+apiVersion: kyverno.io/v1
+kind: Policy
+metadata:
+  name: add-labels-jobs
+spec:
+  background: false
+  failurePolicy: Ignore
+  validationFailureAction: audit
+  rules:
+  - match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+          selector:
+            matchLabels:
+              airbyte: job-pod
+    mutate:
+      patchStrategicMerge:
+        metadata:
+          labels:
+            DataClass: Medium
+    name: add-job-data-class-label

@@ -2,7 +2,6 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: airbyte-admin-binding
-  namespace: a1b9b0-dev
 subjects:
   - kind: ServiceAccount
     name: airbyte-admin
