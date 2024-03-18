@@ -270,7 +270,57 @@ secrets: {}
 #   JOBS_DATABASE_MINIMUM_FLYWAY_MIGRATION_VERSION: 0.29.15.001
 #   CONFIGS_DATABASE_MINIMUM_FLYWAY_MIGRATION_VERSION: 0.35.15.001
 env_vars:
-  CONTAINER_ORCHESTRATOR_ENABLED: true
+  - name: CHECK_JOB_KUBE_LABELS
+    value: DataClass=Medium
+  - name: CHECK_JOB_MAIN_CONTAINER_CPU_LIMIT
+    value: 100m
+  - name: CHECK_JOB_MAIN_CONTAINER_CPU_REQUEST
+    value: 50m
+  - name: CHECK_JOB_MAIN_CONTAINER_MEMORY_LIMIT
+    value: 300Mi
+  - name: CHECK_JOB_MAIN_CONTAINER_MEMORY_REQUEST
+    value: 200Mi
+  - name: DISCOVER_JOB_KUBE_LABELS
+    value: DataClass=Medium
+  - name: JOB_MAIN_CONTAINER_CPU_LIMIT
+    value: 100m
+  - name: JOB_MAIN_CONTAINER_CPU_REQUEST
+    value: 50m
+  - name: JOB_MAIN_CONTAINER_MEMORY_LIMIT
+    value: 300Mi
+  - name: JOB_MAIN_CONTAINER_MEMORY_REQUEST
+    value: 200Mi
+  - name: NORMALIZATION_JOB_KUBE_LABELS
+    value: DataClass=Medium
+  - name: NORMALIZATION_JOB_MAIN_CONTAINER_CPU_LIMIT
+    value: 100m
+  - name: NORMALIZATION_JOB_MAIN_CONTAINER_CPU_REQUEST
+    value: 50m
+  - name: NORMALIZATION_JOB_MAIN_CONTAINER_MEMORY_LIMIT
+    value: 300Mi
+  - name: NORMALIZATION_JOB_MAIN_CONTAINER_MEMORY_REQUEST
+    value: 200Mi
+  - name: REPLICATION_JOB_KUBE_LABELS
+    value: DataClass=Medium
+  - name: REPLICATION_ORCHESTRATOR_CPU_LIMIT
+    value: 100m
+  - name: REPLICATION_ORCHESTRATOR_CPU_REQUEST
+    value: 50m
+  - name: SPEC_JOB_KUBE_LABELS
+    value: DataClass=Medium
+  - name: SIDECAR_KUBE_CPU_LIMIT
+    value: 100m
+  - name: SIDECAR_KUBE_CPU_REQUEST
+    value: 50m
+  - name: SOCAT_KUBE_CPU_LIMIT
+    value: 100m
+  - name: SOCAT_KUBE_CPU_REQUEST
+    value: 50m
+  - name: SOCAT_KUBE_MEMORY_LIMIT
+    value: 300Mi
+  - name: SIDECAR_KUBE_MEMORY_LIMIT
+    value: 300Mi  
+  #CONTAINER_ORCHESTRATOR_ENABLED: true
 
 ## extraSelectorLabels [object] - use to specify own additional selector labels for deployment
 extraSelectorLabels: {}
