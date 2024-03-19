@@ -1317,7 +1317,7 @@ cron:
   env_vars: {}
 
 connector-builder-server:
-  enabled: false
+  enabled: true
   # -- Number of connector-builder-server replicas
   replicaCount: 1
 
