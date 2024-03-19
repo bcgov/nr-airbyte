@@ -178,18 +178,14 @@ webapp:
   ## resources, such as Minikube. If you do want to specify resources, uncomment the following
   ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   resources:
-    ## Example:
-    ## limits:
-    ##    cpu: 200m
-    ##    memory: 1Gi
-    # -- The resources limits for the Web container
-    limits: {}
-    ## Examples:
-    ## requests:
-    ##    memory: 256Mi
-    ##    cpu: 250m
-    # -- The requested resources for the Web container
-    requests: {}
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    # limits: {}
+    requests:
+      memory: 256Mi
+      cpu: 50m
+    # requests: {}
 
   # -- Node labels for pod assignment, see https://kubernetes.io/docs/user-guide/node-selection/
   nodeSelector: {}
@@ -387,18 +383,14 @@ pod-sweeper:
   ## resources, such as Minikube. If you do want to specify resources, uncomment the following
   ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   resources:
-    ## Example:
-    ## limits:
-    ##    cpu: 200m
-    ##    memory: 1Gi
-    # -- The resources limits for the podSweeper container
-    limits: {}
-    ## Examples:
-    ## requests:
-    ##    memory: 256Mi
-    ##    cpu: 250m
-    # -- The requested resources for the podSweeper container
-    requests: {}
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    # limits: {}
+    requests:
+      memory: 256Mi
+      cpu: 50m
+    # requests: {}
 
   # -- Node labels for pod assignment, see https://kubernetes.io/docs/user-guide/node-selection/
   nodeSelector: {}
@@ -484,18 +476,14 @@ server:
   ## resources, such as Minikube. If you do want to specify resources, uncomment the following
   ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   resources:
-    ## Example:
-    ## limits:
-    ##    cpu: 200m
-    ##    memory: 1Gi
-    # -- The resources limits for the server container
-    limits: {}
-    ## Examples:
-    ## requests:
-    ##    memory: 256Mi
-    ##    cpu: 250m
-    # -- The requested resources for the server container
-    requests: {}
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    # limits: {}
+    requests:
+      memory: 256Mi
+      cpu: 50m
+    # requests: {}
 
   # -- Node labels for pod assignment, see https://kubernetes.io/docs/user-guide/node-selection/
   nodeSelector: {}
@@ -658,18 +646,14 @@ worker:
   ## resources, such as Minikube. If you do want to specify resources, uncomment the following
   ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   resources:
-    ## Example:
-    ## limits:
-    ##    cpu: 200m
-    ##    memory: 1Gi
-    #! -- The resources limits for the worker container
-    limits: {}
-    ## Examples:
-    ## requests:
-    ##    memory: 256Mi
-    ##    cpu: 250m
-    # -- The requested resources for the worker container
-    requests: {}
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    # limits: {}
+    requests:
+      memory: 256Mi
+      cpu: 50m
+    # requests: {}
 
   # -- Node labels for pod assignment, see https://kubernetes.io/docs/user-guide/node-selection/
   nodeSelector: {}
@@ -691,9 +675,20 @@ worker:
   ## - name: JOB_KUBE_TOLERATIONS
   ##   value: "key=airbyte-server,operator=Equals,value=true,effect=NoSchedule"
   # -- Additional env vars for worker pods
-  extraEnv: []
-    
-
+  extraEnv:
+  # Abi: further resource limits on sidecars
+  - name: SIDECAR_KUBE_CPU_LIMIT
+    value: 100m
+  - name: SIDECAR_KUBE_CPU_REQUEST
+    value: 50m
+  - name: SOCAT_KUBE_CPU_LIMIT
+    value: 100m
+  - name: SOCAT_KUBE_CPU_REQUEST
+    value: 50m
+  - name: SOCAT_KUBE_MEMORY_LIMIT
+    value: 300Mi
+  - name: SIDECAR_KUBE_MEMORY_LIMIT
+    value: 300Mi
   ##  worker.extraVolumeMounts [array] Additional volumeMounts for worker container(s).
   ## Abi: enabled (when using `worker.containerSecurityContext.readOnlyRootFilesystem=true`):
   extraVolumeMounts:
@@ -767,18 +762,14 @@ metrics:
   ## resources, such as Minikube. If you do want to specify resources, uncomment the following
   ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   resources:
-    ## Example:
-    ## limits:
-    ##    cpu: 200m
-    ##    memory: 1Gi
-    # -- The resources limits for the metrics-reporter container
-    limits: {}
-    ## Examples:
-    ## requests:
-    ##    memory: 256Mi
-    ##    cpu: 250m
-    # -- The requested resources for the metrics-reporter container
-    requests: {}
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    # limits: {}
+    requests:
+      memory: 256Mi
+      cpu: 50m
+    # requests: {}
 
   # -- Node labels for pod assignment, see https://kubernetes.io/docs/user-guide/node-selection/
   nodeSelector: {}
@@ -1059,18 +1050,14 @@ temporal:
   ## resources, such as Minikube. If you do want to specify resources, uncomment the following
   ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   resources:
-    ## Example:
-    ## requests:
-    ##    memory: 256Mi
-    ##    cpu: 250m
-    # -- The requested resources for temporal pods
-    requests: {}
-    ## Example:
-    ## limits:
-    ##    cpu: 200m
-    ##    memory: 1Gi
-    # -- The resources limits for temporal pods
-    limits: {}
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    # limits: {}
+    requests:
+      memory: 256Mi
+      cpu: 50m
+    # requests: {}
 
   extraContainers: []
 
@@ -1224,18 +1211,14 @@ cron:
   ## resources, such as Minikube. If you do want to specify resources, uncomment the following
   ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   resources:
-    ## Example:
-    ## limits:
-    ##    cpu: 200m
-    ##    memory: 1Gi
-    # -- The resources limits for the cron container
-    limits: {}
-    ## Examples:
-    ## requests:
-    ##    memory: 256Mi
-    ##    cpu: 250m
-    # -- The requested resources for the cron container
-    requests: {}
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    # limits: {}
+    requests:
+      memory: 256Mi
+      cpu: 50m
+    # requests: {}
 
   # -- Node labels for pod assignment, see https://kubernetes.io/docs/user-guide/node-selection/
   nodeSelector: {}
@@ -1334,7 +1317,7 @@ cron:
   env_vars: {}
 
 connector-builder-server:
-  enabled: true
+  enabled: false
   # -- Number of connector-builder-server replicas
   replicaCount: 1
 
@@ -1375,18 +1358,14 @@ connector-builder-server:
   ## resources, such as Minikube. If you do want to specify resources, uncomment the following
   ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   resources:
-    ## Example:
-    ## limits:
-    ##    cpu: 200m
-    ##    memory: 1Gi
-    # -- The resources limits for the connector-builder-server container
-    limits: {}
-    ## Examples:
-    ## requests:
-    ##    memory: 256Mi
-    ##    cpu: 250m
-    # -- The requested resources for the connector-builder-server container
-    requests: {}
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    # limits: {}
+    requests:
+      memory: 256Mi
+      cpu: 50m
+    # requests: {}
 
   log:
     # -- The log level to log at.
@@ -1441,12 +1420,12 @@ airbyte-api-server:
 
   ## Abi: increased resource limits so that we can trigger jobs (from Airflow) with the API, probably too high but haven't found the ideal limits yet
     limits:
-      cpu: 2
-      memory: 2Gi
+      cpu: 500m
+      memory: 1Gi
     # limits: {}
     requests:
-      memory: 1Gi
-      cpu: 1
+      memory: 256Mi
+      cpu: 50m
     # requests: {}
 
 
@@ -1541,18 +1520,14 @@ workload-api-server:
   ## resources, such as Minikube. If you do want to specify resources, uncomment the following
   ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   resources:
-    ## Example:
-    ## limits:
-    ##    cpu: 200m
-    ##    memory: 1Gi
-    # -- The resources limits for the airbyte-workload-api-server container
-    limits: {}
-    ## Examples:
-    ## requests:
-    ##    memory: 256Mi
-    ##    cpu: 250m
-    # -- The requested resources for the airbyte-workload-api-server container
-    requests: {}
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    # limits: {}
+    requests:
+      memory: 256Mi
+      cpu: 50m
+    # requests: {}
 
   log:
     # -- The log level at which to log
