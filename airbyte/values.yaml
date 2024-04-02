@@ -1070,7 +1070,7 @@ postgresql:
 
   ## image.repository Repository for airbyte-db statefulset
   image:
-    repository: image-registry.openshift-image-registry.svc:5000/a1b9b0-dev/db
+    repository: ghcr.io/bcgov/nr-containers/airbyte/airbyte-db
   # -- Airbyte Postgresql username
   postgresqlUsername: airbyte
   # -- Airbyte Postgresql password

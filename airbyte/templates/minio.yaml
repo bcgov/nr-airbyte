@@ -101,7 +101,7 @@ spec:
   restartPolicy: OnFailure
   containers:
     - name: minio-mc
-      image: image-registry.openshift-image-registry.svc:5000/a1b9b0-dev/minio-mc:v6
+      image: ghcr.io/bcgov/nr-containers/airbyte/minio
       command: ["/bin/sh", "-c",
         "until (/usr/bin/mc config host add myminio $MINIO_ENDPOINT $MINIO_ACCESS_KEY $MINIO_SECRET_KEY) do echo '...waiting...' && sleep 1; done;
           /usr/bin/mc mb --ignore-existing myminio/state-storage;
