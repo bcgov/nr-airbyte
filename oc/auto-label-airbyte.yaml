@@ -1,0 +1,63 @@
+apiVersion: kyverno.io/v1
+kind: Policy
+metadata:
+  name: add-airbyte-labels
+spec:
+  rules:
+    - match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              selector:
+                matchLabels:
+                  app.kubernetes.io/instance: airbyte
+      mutate:
+        patchStrategicMerge:
+          metadata:
+            labels:
+              DataClass: Low
+---
+apiVersion: kyverno.io/v1
+kind: Policy
+metadata:
+  name: add-airbyte-job-labels
+spec:
+  rules:
+    - match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              selector:
+                matchLabels:
+                  airbyte: job-pod
+      mutate:
+        patchStrategicMerge:
+          metadata:
+            labels:
+              DataClass: Medium
+---
+apiVersion: kyverno.io/v1
+kind: Policy
+metadata:
+  name: add-airbyte-minio-label
+spec:
+  background: false
+  failurePolicy: Ignore
+  rules:
+    - exclude:
+      generate:
+        clone: {}
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              names:
+                - airbyte-minio-create-bucket
+      mutate:
+        patchStrategicMerge:
+          metadata:
+            labels:
+              DataClass: Medium

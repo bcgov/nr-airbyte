@@ -1,11 +1,11 @@
-{{- if .Values.minio.enabled }}
+{{- if (eq (lower (default "" .Values.global.storage.type)) "minio")}}
 apiVersion: apps/v1 #  for k8s versions before 1.9.0 use apps/v1beta2  and before 1.8.0 use extensions/v1beta1
 kind: StatefulSet
 metadata:
   # This name uniquely identifies the Deployment
   name: airbyte-minio
   annotations:
-    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook: pre-install
     helm.sh/hook-weight: "-1"
   labels:
     {{ include "airbyte.minioLabels" . | nindent 4 }}
@@ -27,28 +27,33 @@ spec:
       labels:
         # Label is used as selector in the service.
         {{ include "airbyte.minioSelectorLabels" . | nindent 8 }}
-        DataClass: Low
     spec:
       # Refer to the PVC created earlier
       containers:
         - name: airbyte-minio
           # Pulls the default Minio image from Docker Hub
-          image: image-registry.openshift-image-registry.svc:5000/a1b9b0-dev/minio@sha256:7a0fc961ebd7baa1ec89c8ce93920d1a8def1506aafec6c72d112acf0be71048
+          image: "{{ .Values.minio.image.repository }}:{{ .Values.minio.image.tag }}"
           args:
             - server
-            - /data # previously /storage (not sure why)
+            - /storage
           env:
             # Minio access key and secret key. This must match the S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY declared in /dev/.env.
             - name: MINIO_ROOT_USER
-              value: {{ .Values.minio.auth.rootUser  }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-airbyte-secrets
+                  key: DEFAULT_MINIO_ACCESS_KEY
             - name: MINIO_ROOT_PASSWORD
-              value: {{ .Values.minio.auth.rootPassword }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-airbyte-secrets
+                  key: DEFAULT_MINIO_SECRET_KEY
           ports:
             - containerPort: 9000
           # Mount the volume into the pod
           volumeMounts:
             - name: airbyte-minio-pv-claim # must match the volume name, above
-              mountPath: "/data"
+              mountPath: "/storage"
       {{- with .Values.minio.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -70,7 +75,7 @@ metadata:
   labels:
     {{ include "airbyte.minioLabels" . | nindent 4 }}
   annotations:
-    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook: pre-install
     helm.sh/hook-weight: "-1"
 spec:
   ports:
@@ -79,4 +84,58 @@ spec:
       protocol: TCP
   selector:
     {{ include "airbyte.minioSelectorLabels" . | nindent 4 }}
+---
+# This pod creates the state-storage bucket in the minio server,
+# which the local cloud deployment requires to store its state.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: airbyte-minio-create-bucket
+  annotations:
+    "helm.sh/hook": post-install, post-upgrade
+    "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
+  label:
+    DataClass: Low
+  
+spec:
+  restartPolicy: OnFailure
+  containers:
+    - name: minio-mc
+      image: ghcr.io/bcgov/nr-containers/airbyte/minio
+      command: ["/bin/sh", "-c",
+        "until (/usr/bin/mc config host add myminio $MINIO_ENDPOINT $MINIO_ACCESS_KEY $MINIO_SECRET_KEY) do echo '...waiting...' && sleep 1; done;
+          /usr/bin/mc mb --ignore-existing myminio/state-storage;
+          /usr/bin/mc policy set public myminio/state-storage;
+          /usr/bin/mc mb --ignore-existing myminio/airbyte-dev-logs;
+          /usr/bin/mc policy set public myminio/airbyte-dev-logs;"]
+      env:
+        {{- if and (eq (lower (default "" .Values.global.storage.type)) "minio") (((.Values.global).storage).minio) }}
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "airbyte.secretStoreName" .Values.global.storage.storageSecretName }}
+              key: {{ include "airbyte.minioAccessKeyIdSecretKey" .Values.global.storage.minio.accessKeyIdSecretKey }}
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "airbyte.secretStoreName" .Values.global.storage.storageSecretName }}
+              key: {{ include "airbyte.minioSecretAccessKeySecretKey" .Values.global.storage.minio.secretAccessKeySecretKey }}
+        {{- else }}
+        # this is for the internally deployed minio
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-airbyte-secrets
+              key: DEFAULT_MINIO_ACCESS_KEY
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-airbyte-secrets
+              key: DEFAULT_MINIO_SECRET_KEY
+        {{- end }}
+        - name: MINIO_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-airbyte-env
+              key: MINIO_ENDPOINT
 {{- end }}

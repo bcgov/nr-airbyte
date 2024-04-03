@@ -1,0 +1,25 @@
+apiVersion: kyverno.io/v1
+kind: Policy
+metadata:
+  name: limit-init-resources
+spec:
+  rules:
+    - match:
+        any:
+          - resources:
+              kinds:
+                - Container
+              names:
+                - relay-stderr
+      mutate:
+        patchStrategicMerge:
+          spec:
+            containers:
+              - name: base
+                resources:
+                  limits:
+                    cpu: 500m
+                    memory: 50Mi
+                  requests:
+                    cpu: 250m
+                    memory: 250Mi
