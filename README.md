@@ -40,7 +40,7 @@ Set resource limits for a specific connection using this command:
 update connection set resource_requirements = '{"cpu_limit": "100m", "cpu_request": "50m", "memory_limit": "1Gi", "memory_request": "500Mi"}' where id = '5ff07aa0-036d-4133-a0e4-c7684d5bb7da';
 ```
 
-More info: https://apps.nrs.gov.bc.ca/int/confluence/x/zQ09Cg
+More info: https://apps.nrs.gov.bc.ca/int/confluence/x/jYQlCw
 
 ![Version: 0.50.17](https://img.shields.io/badge/Version-0.50.17-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.50.17](https://img.shields.io/badge/AppVersion-0.50.17-informational?style=flat-square)
 
